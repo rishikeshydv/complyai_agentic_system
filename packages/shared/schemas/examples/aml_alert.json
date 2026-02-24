@@ -1,0 +1,28 @@
+{
+  "alert_id": "ALERT-001",
+  "alert_type": "AML",
+  "alert_metadata": {
+    "source_system": "core-aml-rules-engine",
+    "created_at": "2026-02-08T01:00:00Z"
+  },
+  "rule_triggered": "CASH_SPIKE_30D",
+  "rule_description": "30-day cash deposits exceeded profile threshold",
+  "rule_thresholds": {
+    "cash_deposit_total_30d": 25000,
+    "cash_deposit_count_30d": 8
+  },
+  "rule_evaluation": {
+    "conditions_triggered": [
+      {
+        "field": "historical_aggregates.cash_deposit_total_30d",
+        "operator": ">=",
+        "threshold": 25000,
+        "actual": 31250,
+        "window_days": 30
+      }
+    ]
+  },
+  "transaction_id": "TX-928771",
+  "customer_id": "CUST-10009",
+  "sanctions_hit_preview": null
+}

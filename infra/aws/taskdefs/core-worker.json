@@ -1,0 +1,35 @@
+{
+  "family": "comply-ai-core-worker",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::879381272878:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::879381272878:role/comply-ai-ecs-task-role",
+  "containerDefinitions": [
+    {
+      "name": "core-worker",
+      "image": "879381272878.dkr.ecr.us-east-1.amazonaws.com/comply-ai/core-worker:latest",
+      "essential": true,
+      "environment": [
+        { "name": "CORE_DB_URL", "value": "postgresql+psycopg2://postgres:Micrower3175@aidoppel-v0-instance-1.ckjq4oo8aa2c.us-east-1.rds.amazonaws.com:5432/complyaiv1?sslmode=require" },
+        { "name": "REDIS_URL", "value": "rediss://default:zJZQwcFtWpsX40LueLvyw6Cbq7MoeSDV@redis-11868.crce262.us-east-1-1.ec2.cloud.redislabs.com:11868/0" },
+        { "name": "CONNECTOR_BASE_URL", "value": "http://connector:8100" },
+        { "name": "CONNECTOR_BANK_URLS", "value": "{\"demo\":\"http://connector:8100\"}" },
+        { "name": "CONNECTOR_API_KEY", "value": "dev-connector-key" },
+        { "name": "AUTO_INGEST_ENABLED", "value": "true" },
+        { "name": "AUTO_INGEST_INTERVAL_SECONDS", "value": "30" },
+        { "name": "AUTO_INGEST_BATCH_SIZE", "value": "100" },
+        { "name": "AUTO_INGEST_OVERLAP_SECONDS", "value": "30" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/comply-ai/core-worker",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+services:
+  postgres_core:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: core
+    ports:
+      - "55432:5432"
+    volumes:
+      - pg_core_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d core"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  postgres_connector:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: connector
+    ports:
+      - "55433:5432"
+    volumes:
+      - pg_connector_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d connector"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  redis:
+    image: redis:7
+    ports:
+      - "56379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  connector:
+    build:
+      context: ..
+      dockerfile: apps/connector/Dockerfile
+    env_file:
+      - ../apps/connector/.env.example
+    environment:
+      CONNECTOR_DB_URL: postgresql+psycopg2://postgres:postgres@postgres_connector:5432/connector
+      CONNECTOR_API_KEY: dev-connector-key
+      CORE_ALERT_CALLBACK_URL: http://core-api:8000
+    depends_on:
+      postgres_connector:
+        condition: service_healthy
+    ports:
+      - "8100:8100"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8100/health').read()\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  core-api:
+    build:
+      context: ..
+      dockerfile: apps/core-api/Dockerfile
+    env_file:
+      - ../apps/core-api/.env.example
+      - ../apps/core-api/.env
+    environment:
+      CORE_DB_URL: postgresql+psycopg2://postgres:postgres@postgres_core:5432/core
+      REDIS_URL: redis://redis:6379/0
+      CONNECTOR_BASE_URL: http://connector:8100
+      CONNECTOR_BANK_URLS: '{\"demo\":\"http://connector:8100\"}'
+      CONNECTOR_API_KEY: dev-connector-key
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      AUTO_INGEST_ENABLED: "true"
+      AUTO_INGEST_INTERVAL_SECONDS: "30"
+      AUTO_INGEST_BATCH_SIZE: "100"
+      AUTO_INGEST_OVERLAP_SECONDS: "30"
+      CORS_ALLOW_ORIGINS: http://localhost:3000,http://127.0.0.1:3000,http://${HOST_IP:-localhost}:3000
+    depends_on:
+      postgres_core:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      connector:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  core-worker:
+    build:
+      context: ..
+      dockerfile: apps/core-worker/Dockerfile
+    env_file:
+      - ../apps/core-api/.env.example
+      - ../apps/core-api/.env
+    environment:
+      CORE_DB_URL: postgresql+psycopg2://postgres:postgres@postgres_core:5432/core
+      REDIS_URL: redis://redis:6379/0
+      CONNECTOR_BASE_URL: http://connector:8100
+      CONNECTOR_BANK_URLS: '{\"demo\":\"http://connector:8100\"}'
+      CONNECTOR_API_KEY: dev-connector-key
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      AUTO_INGEST_ENABLED: "true"
+      AUTO_INGEST_INTERVAL_SECONDS: "30"
+      AUTO_INGEST_BATCH_SIZE: "100"
+      AUTO_INGEST_OVERLAP_SECONDS: "30"
+    depends_on:
+      core-api:
+        condition: service_healthy
+      postgres_core:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  core-beat:
+    build:
+      context: ..
+      dockerfile: apps/core-worker/Dockerfile
+    command: ["sh", "-c", "python -m core.utils.wait_for_db && python -m core.db.bootstrap && celery -A core.celery_app:celery_app beat --loglevel=info"]
+    env_file:
+      - ../apps/core-api/.env.example
+      - ../apps/core-api/.env
+    environment:
+      CORE_DB_URL: postgresql+psycopg2://postgres:postgres@postgres_core:5432/core
+      REDIS_URL: redis://redis:6379/0
+      CONNECTOR_BASE_URL: http://connector:8100
+      CONNECTOR_BANK_URLS: '{\"demo\":\"http://connector:8100\"}'
+      CONNECTOR_API_KEY: dev-connector-key
+      CELERY_TASK_ALWAYS_EAGER: "false"
+      AUTO_INGEST_ENABLED: "true"
+      AUTO_INGEST_INTERVAL_SECONDS: "30"
+      AUTO_INGEST_BATCH_SIZE: "100"
+      AUTO_INGEST_OVERLAP_SECONDS: "30"
+    depends_on:
+      core-worker:
+        condition: service_started
+      core-api:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    environment:
+      NEXT_PUBLIC_CORE_API_URL: http://${HOST_IP:-localhost}:8000
+      BACKEND_API_URL: http://core-api:8000
+    depends_on:
+      core-api:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+
+volumes:
+  pg_core_data:
+  pg_connector_data:

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ConnectorTransaction",
+  "type": "object",
+  "required": ["transaction_id", "snapshot"],
+  "properties": {
+    "transaction_id": { "type": "string" },
+    "snapshot": { "type": "object" }
+  },
+  "additionalProperties": false
+}

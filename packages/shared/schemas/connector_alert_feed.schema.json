@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ConnectorAlertFeed",
+  "type": "object",
+  "required": ["items", "count"],
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["alert_id", "alert_type", "rule_triggered", "created_at", "source_event_id"],
+        "additionalProperties": false,
+        "properties": {
+          "alert_id": {"type": "string"},
+          "alert_type": {"type": "string", "enum": ["AML", "SANCTIONS"]},
+          "rule_triggered": {"type": "string"},
+          "customer_id": {"type": ["string", "null"]},
+          "transaction_id": {"type": ["string", "null"]},
+          "created_at": {"type": "string", "format": "date-time"},
+          "source_event_id": {"type": "string"}
+        }
+      }
+    },
+    "count": {"type": "integer", "minimum": 0}
+  }
+}

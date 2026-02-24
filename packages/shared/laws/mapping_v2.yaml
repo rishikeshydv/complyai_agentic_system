@@ -1,0 +1,86 @@
+typologies:
+  - typology_id: TYPO_STRUCTURING
+    name: Structured Cash Activity
+    signals_definition:
+      summary: "Repeated near-threshold cash activity in a short window."
+      keywords: ["cash", "structuring", "threshold", "deposit"]
+    default_control_ids:
+      - CTRL_STRUCTURING_MONITOR
+      - CTRL_SAR_FILE
+  - typology_id: TYPO_OFAC_NAME_MATCH
+    name: Potential Sanctions Match
+    signals_definition:
+      summary: "Sanctions screening matched subject with high confidence."
+      keywords: ["ofac", "sanctions", "screening", "match"]
+    default_control_ids:
+      - CTRL_OFAC_ESCALATE
+      - CTRL_SANCTIONS_REPORTING
+
+controls:
+  - control_id: CTRL_STRUCTURING_MONITOR
+    name: Structuring Monitoring
+    description: "Review clustered cash activity against expected customer behavior."
+    expected_artifacts: ["Transaction timeline", "Linked cash deposits", "Aggregate calculations"]
+    jurisdiction_scope: "federal+state"
+  - control_id: CTRL_SAR_FILE
+    name: SAR Filing Decision
+    description: "Determine if suspicious activity report drafting/escalation is required."
+    expected_artifacts: ["Trigger explanation", "Narrative support", "Investigation notes"]
+    jurisdiction_scope: "federal"
+  - control_id: CTRL_OFAC_ESCALATE
+    name: OFAC Match Escalation
+    description: "Escalate potential sanctions match for review and disposition."
+    expected_artifacts: ["Match details", "Scoring rationale", "Decision log"]
+    jurisdiction_scope: "federal+state"
+  - control_id: CTRL_SANCTIONS_REPORTING
+    name: Sanctions Reporting/Blocking
+    description: "Evaluate sanctions obligations and required operational actions."
+    expected_artifacts: ["List source details", "False-positive analysis", "Escalation approval"]
+    jurisdiction_scope: "federal"
+
+control_to_citations:
+  - control_id: CTRL_STRUCTURING_MONITOR
+    citation_ids: ["AML-US-31CFR1010.311", "NJ-AML-NJDOBI-001"]
+    jurisdiction_filter: "federal+NJ"
+    priority: 10
+  - control_id: CTRL_SAR_FILE
+    citation_ids: ["AML-US-31CFR1010.320"]
+    jurisdiction_filter: "federal"
+    priority: 1
+  - control_id: CTRL_OFAC_ESCALATE
+    citation_ids: ["SANCTIONS-US-OFAC-GEN", "NJ-SANCTIONS-NJAC-001"]
+    jurisdiction_filter: "federal+NJ"
+    priority: 1
+  - control_id: CTRL_SANCTIONS_REPORTING
+    citation_ids: ["SANCTIONS-US-OFAC-GEN"]
+    jurisdiction_filter: "federal"
+    priority: 5
+
+rule_maps:
+  - bank_id: default
+    alert_type: AML
+    rule_triggered: CASH_SPIKE_30D
+    typology_id: TYPO_STRUCTURING
+    control_ids: ["CTRL_STRUCTURING_MONITOR", "CTRL_SAR_FILE"]
+    citation_ids: []
+    confidence: "0.95"
+    version: "v2-seed-1"
+    owner: "seed"
+  - bank_id: default
+    alert_type: AML
+    rule_triggered: STRUCTURING_RULE_03
+    typology_id: TYPO_STRUCTURING
+    control_ids: ["CTRL_STRUCTURING_MONITOR", "CTRL_SAR_FILE"]
+    citation_ids: []
+    confidence: "0.98"
+    version: "v2-seed-1"
+    owner: "seed"
+  - bank_id: default
+    alert_type: SANCTIONS
+    rule_triggered: OFAC_NAME_SCREEN_MATCH
+    typology_id: TYPO_OFAC_NAME_MATCH
+    control_ids: ["CTRL_OFAC_ESCALATE", "CTRL_SANCTIONS_REPORTING"]
+    citation_ids: []
+    confidence: "0.99"
+    version: "v2-seed-1"
+    owner: "seed"

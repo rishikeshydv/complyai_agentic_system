@@ -1,0 +1,93 @@
+**What You Do Next (In Order) for AWS (SG-to-SG, same VPC)**
+
+1. **Decide endpoints**
+- Public app domain: `https://app.<your-domain>`
+- Public API path on same ALB: `https://app.<your-domain>/v1/...`
+- Internal connector endpoint: internal ALB/NLB DNS (recommended)
+
+2. **Create AWS baseline**
+- VPC: 2 public subnets (ALB), 2 private subnets (ECS), NAT for private subnets
+- Aurora Postgres (core DB, and optionally connector DB)
+- Redis (ElastiCache or Redis Cloud) reachable from private subnets
+- CloudWatch log groups for each service
+
+3. **Create IAM roles**
+- `ecsTaskExecutionRole` with `AmazonECSTaskExecutionRolePolicy` (+ ECR pull, logs)
+- `ecsTaskRole` with least privilege (Secrets/SSM read, optional S3)
+
+4. **Create Security Groups**
+- `alb-public-sg`: inbound 443 from internet
+- `web-sg`: inbound 3000 from `alb-public-sg`
+- `coreapi-sg`: inbound 8000 from `alb-public-sg`
+- `connector-sg`: inbound 8100 from `coreapi-sg` (or from an internal-alb sg)
+- `rds-sg`: inbound 5432 from `coreapi-sg`, `worker-sg`, `connector-sg`
+- `worker-sg`: no inbound; allow outbound to DB/Redis
+- `redis-sg`: inbound redis port from `coreapi-sg` + `worker-sg`
+
+5. **Create Load Balancer(s)**
+- Public ALB:
+  - Target group `tg-web` -> port 3000, health `GET /`
+  - Target group `tg-coreapi` -> port 8000, health `GET /health`
+  - Listener rules:
+    - `/v1/*` (and `/docs*` optional) -> `tg-coreapi`
+    - default `/*` -> `tg-web`
+- Optional but recommended: internal ALB/NLB for `connector` (so core-api has a stable internal DNS)
+
+6. **Create ECR repos + push images**
+From `agentic_system/`:
+```bash
+export AWS_REGION=us-east-1
+export APP=comply-ai
+export IMAGE_TAG=latest
+./infra/aws/scripts/ecr_push.sh
+```
+
+7. **Create ECS cluster**
+```bash
+aws ecs create-cluster --cluster-name comply-ai-ecs --region us-east-1
+```
+
+8. **Create Secrets (recommended)**
+- Put `CORE_DB_URL`, `REDIS_URL`, `CONNECTOR_API_KEY`, `SIGNED_REQUEST_SECRET`, `LAWS_V2_*`, etc. in Secrets Manager/SSM.
+- Plan to inject the same secret into multiple task defs.
+
+9. **Fill ECS task definitions (templates already created)**
+Edit:
+- `agentic_system/infra/aws/taskdefs/core-api.json`
+- `agentic_system/infra/aws/taskdefs/web.json`
+- `agentic_system/infra/aws/taskdefs/connector.json`
+- `agentic_system/infra/aws/taskdefs/core-worker.json`
+- `agentic_system/infra/aws/taskdefs/core-beat.json`
+
+Key env values (important):
+- `web`:
+  - `NEXT_PUBLIC_CORE_API_URL=https://app.<your-domain>`
+  - `BACKEND_API_URL=http://<internal-core-api-dns>:8000` (or public ALB if you don’t have internal)
+- `core-api/core-worker/core-beat`:
+  - `CONNECTOR_BASE_URL=http://<internal-connector-dns>:8100`
+  - `CONNECTOR_BANK_URLS={"demo":"http://<internal-connector-dns>:8100"}`
+- DB/Redis/ES: point to AWS resources, not localhost/docker hostnames.
+
+10. **Register task definitions**
+```bash
+aws ecs register-task-definition --cli-input-json file://infra/aws/taskdefs/core-api.json
+aws ecs register-task-definition --cli-input-json file://infra/aws/taskdefs/web.json
+aws ecs register-task-definition --cli-input-json file://infra/aws/taskdefs/connector.json
+aws ecs register-task-definition --cli-input-json file://infra/aws/taskdefs/core-worker.json
+aws ecs register-task-definition --cli-input-json file://infra/aws/taskdefs/core-beat.json
+```
+
+11. **Create ECS services**
+- `core-api` service (attach to `tg-coreapi`)
+- `web` service (attach to `tg-web`)
+- `connector` service (no public LB; attach to internal TG if you made internal LB)
+- `core-worker` service (no LB)
+- `core-beat` service (no LB)
+
+12. **Validate**
+- `https://app.<your-domain>/` loads
+- `https://app.<your-domain>/v1/health` returns OK
+- From web UI:
+  - `/playground` works
+  - `/cases` shows generated cases after simulator ticks
+- CloudWatch logs show no DB connection errors and core-api can reach connector.

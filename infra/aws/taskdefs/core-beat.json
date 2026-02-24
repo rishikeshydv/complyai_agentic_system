@@ -1,0 +1,40 @@
+{
+  "family": "comply-ai-core-beat",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::879381272878:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::879381272878:role/comply-ai-ecs-task-role",
+  "containerDefinitions": [
+    {
+      "name": "core-beat",
+      "image": "879381272878.dkr.ecr.us-east-1.amazonaws.com/comply-ai/core-worker:latest",
+      "essential": true,
+      "command": [
+        "sh",
+        "-c",
+        "python -m core.utils.wait_for_db && python -m core.db.bootstrap && celery -A core.celery_app:celery_app beat --loglevel=info"
+      ],
+      "environment": [
+        { "name": "CORE_DB_URL", "value": "postgresql+psycopg2://postgres:Micrower3175@aidoppel-v0-instance-1.ckjq4oo8aa2c.us-east-1.rds.amazonaws.com:5432/complyaiv1?sslmode=require" },
+        { "name": "REDIS_URL", "value": "rediss://default:zJZQwcFtWpsX40LueLvyw6Cbq7MoeSDV@redis-11868.crce262.us-east-1-1.ec2.cloud.redislabs.com:11868/0" },
+        { "name": "CONNECTOR_BASE_URL", "value": "http://connector:8100" },
+        { "name": "CONNECTOR_BANK_URLS", "value": "{\"demo\":\"http://connector:8100\"}" },
+        { "name": "CONNECTOR_API_KEY", "value": "dev-connector-key" },
+        { "name": "AUTO_INGEST_ENABLED", "value": "true" },
+        { "name": "AUTO_INGEST_INTERVAL_SECONDS", "value": "30" },
+        { "name": "AUTO_INGEST_BATCH_SIZE", "value": "100" },
+        { "name": "AUTO_INGEST_OVERLAP_SECONDS", "value": "30" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/comply-ai/core-beat",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

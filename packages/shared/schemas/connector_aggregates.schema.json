@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ConnectorAggregates",
+  "type": "object",
+  "required": ["customer_id", "rule_triggered", "window_days", "aggregates"],
+  "properties": {
+    "customer_id": { "type": "string" },
+    "rule_triggered": { "type": "string" },
+    "window_days": { "type": ["integer", "null"] },
+    "aggregates": { "type": "object" },
+    "linked_transactions": {
+      "type": "array",
+      "items": { "type": "object" }
+    }
+  },
+  "additionalProperties": false
+}

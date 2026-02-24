@@ -1,0 +1,77 @@
+Project Context: Law Search Engine V2 (Comply Pivot MVP)
+
+Repo:
+- /Users/rishi/Desktop/comply-pivot/mvp
+
+Goal:
+- Build a Law KB + Law Mapping engine on top of existing ingestion (not rewrite ingestion).
+
+What is already implemented:
+
+1) Backend V2 module (API app)
+- Location: `apps/api/app/laws_v2`
+- Includes:
+  - DB models + Alembic migration for:
+    - `regulatory_chunks`
+    - `obligation_cards`
+    - `control_objectives`
+    - `typologies`
+    - `rule_to_typology_map`
+    - `control_to_obligation_map`
+    - proposed mapping table for fallback suggestions
+  - Post-processing pipeline:
+    - `postprocess/chunker.py`
+    - `postprocess/obligation_extractor.py`
+    - `postprocess/indexers.py`
+    - `postprocess/postprocessor.py`
+  - Law mapping engine:
+    - `law_mapping/models.py`
+    - `law_mapping/deterministic.py`
+    - `law_mapping/retrieval.py`
+    - `law_mapping/explainer.py`
+    - `law_mapping/service.py`
+  - Search + mapping routes:
+    - `GET /v1/laws/search`
+    - `POST /v1/laws/map-event`
+  - Docs:
+    - `apps/api/app/laws_v2/docs/LAW_KB_AND_MAPPING.md`
+  - Seeds/scripts:
+    - `apps/api/app/scripts/init_laws_v2.py`
+    - `apps/api/app/scripts/backfill_laws_v2.py`
+    - `apps/api/app/scripts/seed_laws_v2.py`
+
+2) Ingestion integration
+- V2 adapter is wired so post-processing runs after ingestion jobs.
+- Existing scraped `regulatory_documents` can be reused (no re-scrape needed).
+- Backfill script exists to generate chunks/obligations from existing docs.
+
+3) ES + search behavior
+- ES indices used: `reg_chunks`, `reg_obligations`.
+- V2 search returns obligation-first results (must_do, summary bullets, artifacts, excerpt, citation/source_url, etc).
+
+4) Web UI updates (Law Search page)
+- Location: `apps/web/app/law_search/page.tsx`
+- Upgraded:
+  - loading/empty UI components
+  - result cards (better hierarchy + metadata/actions)
+  - safe clipboard copy fallback for `Cite` button
+- Fixed loading behavior:
+  - loading now appears on every new search request.
+- Removed default auto-search (`ofac`) on page load.
+- Added a professional initial welcome panel (instead of fake loading) with quick-query chips.
+
+5) Confidence behavior fix
+- Previous mock extractor had hardcoded `confidence=0.72`.
+- Now uses deterministic heuristic scoring in:
+  - `apps/api/app/laws_v2/postprocess/obligation_extractor.py`
+- Note: old rows may still show 72% until reprocessed/backfilled.
+
+Operational notes:
+- Main DB (typical local): `postgresql+psycopg2://postgres:postgres@localhost:5432/comply_ai`
+- If laws exist in `regulatory_documents` but v2 search is empty, run backfill/init + indexing.
+- LLM is optional; mock behavior is default for local dev.
+- Grounding is enforced; invalid grounding is dropped.
+
+Recent validation status:
+- Web build succeeds: `npm run -s build` in `apps/web`
+- Targeted API tests for extractor/postprocessor passed (with project venv + PYTHONPATH).

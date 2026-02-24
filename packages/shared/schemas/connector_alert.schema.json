@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ConnectorAlert",
+  "type": "object",
+  "required": [
+    "alert_id",
+    "alert_type",
+    "rule_triggered",
+    "rule_description",
+    "rule_thresholds",
+    "rule_evaluation",
+    "transaction_id",
+    "customer_id",
+    "alert_metadata"
+  ],
+  "properties": {
+    "alert_id": { "type": "string" },
+    "alert_type": { "type": "string", "enum": ["AML", "SANCTIONS"] },
+    "alert_metadata": { "type": "object" },
+    "rule_triggered": { "type": "string" },
+    "rule_description": { "type": "string" },
+    "rule_thresholds": { "type": "object" },
+    "rule_evaluation": {
+      "type": "object",
+      "required": ["conditions_triggered"],
+      "properties": {
+        "conditions_triggered": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["field", "operator", "threshold", "actual", "window_days"],
+            "properties": {
+              "field": { "type": "string" },
+              "operator": { "type": "string" },
+              "threshold": {},
+              "actual": {},
+              "window_days": { "type": ["integer", "null"] }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "transaction_id": { "type": ["string", "null"] },
+    "customer_id": { "type": ["string", "null"] },
+    "sanctions_hit_preview": { "type": ["object", "null"] }
+  },
+  "additionalProperties": false
+}

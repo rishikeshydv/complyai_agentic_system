@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CaseActionRequest",
+  "type": "object",
+  "required": ["action", "actor_id"],
+  "properties": {
+    "action": {
+      "type": "string",
+      "enum": [
+        "REVIEW",
+        "ESCALATE",
+        "CLOSE",
+        "REQUEST_SAR_DRAFT",
+        "APPROVE_SAR",
+        "MARK_SAR_FILED"
+      ]
+    },
+    "actor_id": { "type": "string" },
+    "notes": { "type": ["string", "null"] },
+    "sar_narrative": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}

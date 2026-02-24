@@ -1,0 +1,47 @@
+citations:
+  - citation_id: AML-US-31CFR1010.311
+    alert_type: AML
+    jurisdiction: US
+    title: "31 C.F.R. 1010.311 - Filing obligations for reports on currency transactions"
+    text_snippet: "Curated internal summary: financial institutions must file CTRs for reportable cash transactions."
+  - citation_id: AML-US-31CFR1010.320
+    alert_type: AML
+    jurisdiction: US
+    title: "31 C.F.R. 1010.320 - Reports by banks of suspicious transactions"
+    text_snippet: "Curated internal summary: suspicious activity must be reviewed and reported where required."
+  - citation_id: SANCTIONS-US-OFAC-GEN
+    alert_type: SANCTIONS
+    jurisdiction: US
+    title: "OFAC Screening and Blocking Obligations (Internal Curated Reference)"
+    text_snippet: "Curated internal summary: institutions must screen and handle true sanctions matches under policy."
+  - citation_id: NJ-AML-NJDOBI-001
+    alert_type: AML
+    jurisdiction: NJ
+    title: "NJ DOBI AML Program Expectations (Internal Placeholder)"
+    text_snippet: "Curated internal placeholder citation configurable by bank legal teams."
+  - citation_id: NJ-SANCTIONS-NJAC-001
+    alert_type: SANCTIONS
+    jurisdiction: NJ
+    title: "NJAC Sanctions Compliance Obligations (Internal Placeholder)"
+    text_snippet: "Curated internal placeholder citation configurable by bank legal teams."
+
+mappings:
+  - alert_type: AML
+    rule_triggered: CASH_SPIKE_30D
+    citation_ids:
+      - AML-US-31CFR1010.311
+      - AML-US-31CFR1010.320
+      - NJ-AML-NJDOBI-001
+    why_relevant_template: "Rule {{rule_triggered}} indicates abnormal cash behavior relative to threshold checks in {{evidence_pointer}}."
+  - alert_type: AML
+    rule_triggered: STRUCTURING_RULE_03
+    citation_ids:
+      - AML-US-31CFR1010.311
+      - AML-US-31CFR1010.320
+    why_relevant_template: "Potential structuring indicators detected from transaction and aggregate evidence at {{evidence_pointer}}."
+  - alert_type: SANCTIONS
+    rule_triggered: OFAC_NAME_SCREEN_MATCH
+    citation_ids:
+      - SANCTIONS-US-OFAC-GEN
+      - NJ-SANCTIONS-NJAC-001
+    why_relevant_template: "Name screening alert and hit score evidence at {{evidence_pointer}} may require sanctions escalation review."

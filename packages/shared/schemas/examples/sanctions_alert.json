@@ -1,0 +1,30 @@
+{
+  "alert_id": "ALERT-002",
+  "alert_type": "SANCTIONS",
+  "alert_metadata": {
+    "source_system": "sanctions-screening-engine",
+    "created_at": "2026-02-08T02:00:00Z"
+  },
+  "rule_triggered": "OFAC_NAME_SCREEN_MATCH",
+  "rule_description": "Customer name matched sanctions list with high confidence",
+  "rule_thresholds": {
+    "score_threshold": 0.85
+  },
+  "rule_evaluation": {
+    "conditions_triggered": [
+      {
+        "field": "screening.score",
+        "operator": ">=",
+        "threshold": 0.85,
+        "actual": 0.92,
+        "window_days": null
+      }
+    ]
+  },
+  "transaction_id": null,
+  "customer_id": "CUST-20021",
+  "sanctions_hit_preview": {
+    "hit_id": "HIT-OFAC-7781",
+    "score": 0.92
+  }
+}

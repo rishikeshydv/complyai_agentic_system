@@ -1,0 +1,74 @@
+{
+  "family": "comply-ai-core-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::879381272878:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::879381272878:role/comply-ai-ecs-task-role",
+  "containerDefinitions": [
+    {
+      "name": "core-api",
+      "image": "879381272878.dkr.ecr.us-east-1.amazonaws.com/comply-ai/core-api:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "PORT", "value": "8000" },
+        { "name": "UVICORN_WORKERS", "value": "2" },
+
+        { "name": "CORE_DB_URL", "value": "postgresql+psycopg2://postgres:Micrower3175@aidoppel-v0-instance-1.ckjq4oo8aa2c.us-east-1.rds.amazonaws.com:5432/complyaiv1?sslmode=require" },
+        { "name": "REDIS_URL", "value": "rediss://default:zJZQwcFtWpsX40LueLvyw6Cbq7MoeSDV@redis-11868.crce262.us-east-1-1.ec2.cloud.redislabs.com:11868/0" },
+
+        { "name": "CONNECTOR_BASE_URL", "value": "http://connector:8100" },
+        { "name": "CONNECTOR_BANK_URLS", "value": "{\"demo\":\"http://connector:8100\"}" },
+        { "name": "CONNECTOR_API_KEY", "value": "dev-connector-key" },
+
+        { "name": "CORS_ALLOW_ORIGINS", "value": "https://complyai.dev" },
+
+        { "name": "AUTO_INGEST_ENABLED", "value": "true" },
+        { "name": "AUTO_INGEST_INTERVAL_SECONDS", "value": "30" },
+        { "name": "AUTO_INGEST_BATCH_SIZE", "value": "100" },
+        { "name": "AUTO_INGEST_OVERLAP_SECONDS", "value": "30" },
+
+        { "name": "LLM_PROVIDER", "value": "mock" },
+        { "name": "LLM_MODEL_NAME", "value": "mock-llm-v1" },
+        { "name": "PROMPT_VERSION", "value": "v1" },
+        { "name": "CASEFILE_SCHEMA_VERSION", "value": "1.0" },
+
+        { "name": "JWT_SECRET", "value": "strong-random-secret" },
+        { "name": "JWT_ALGORITHM", "value": "HS256" },
+        { "name": "JWT_EXP_MINUTES", "value": "120" },
+
+        { "name": "LAWS_V2_DATABASE_URL", "value": "postgresql+psycopg2://postgres:Micrower3175@aidoppel-v0-instance-1.ckjq4oo8aa2c.us-east-1.rds.amazonaws.com:5432/complyaiv1?sslmode=require" },
+        { "name": "LAWS_V2_USE_ES", "value": "true" },
+        { "name": "LAWS_V2_ES_URL", "value": "https://my-elasticsearch-project-b4618d.es.us-central1.gcp.elastic.cloud:443" },
+        { "name": "LAWS_V2_ES_API_KEY", "value": "UHNUVVpKb0JSU3ozMG5MLWhQdmo6el9iM3hRaU5SenJCT3R0ZkxtMFA2dw==" },
+        { "name": "LAWS_V2_ES_CHUNKS_INDEX", "value": "reg_chunks" },
+        { "name": "LAWS_V2_ES_OBLIGATIONS_INDEX", "value": "reg_obligations" },
+        { "name": "LAWS_V2_CURATED_SEED_IF_EMPTY", "value": "false" },
+
+        { "name": "CORE_RUN_SEED", "value": "false" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/comply-ai/core-api",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()\""],
+        "interval": 15,
+        "timeout": 5,
+        "retries": 5,
+        "startPeriod": 30
+      }
+    }
+  ]
+}

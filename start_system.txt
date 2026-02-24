@@ -1,0 +1,12 @@
+How to test end-to-end now
+
+Start stack:
+cd /Users/rishi/Desktop/comply-pivot/agentic_system
+docker compose -f infra/docker-compose.yml down
+                                                                                                      
+
+
+#to 
+Open UI:
+http://localhost:3000/playground
+Click Start Simulation, then Run 5 Ticks.

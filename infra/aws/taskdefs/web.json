@@ -1,0 +1,50 @@
+{
+  "family": "comply-ai-web",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::879381272878:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::879381272878:role/comply-ai-ecs-task-role",
+  "containerDefinitions": [
+    {
+      "name": "web",
+      "image": "879381272878.dkr.ecr.us-east-1.amazonaws.com/comply-ai/web:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "PORT",
+          "value": "3000"
+        },
+        {
+          "name": "BACKEND_API_URL",
+          "value": "https://frontend-alb-2036678962.us-east-1.elb.amazonaws.com"
+        },
+        {
+          "name": "CORE_API_INTERNAL_URL",
+          "value": "https://frontend-alb-2036678962.us-east-1.elb.amazonaws.com"
+        },
+        {
+          "name": "NEXT_PUBLIC_CORE_API_URL",
+          "value": "https://frontend-alb-2036678962.us-east-1.elb.amazonaws.com"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/comply-ai/web",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

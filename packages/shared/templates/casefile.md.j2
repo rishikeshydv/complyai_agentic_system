@@ -1,0 +1,79 @@
+# Case File - {{ casefile.header.alert_id }}
+
+## Header
+- **Alert Type:** {{ casefile.header.alert_type }}
+- **Status:** {{ casefile.header.status }}
+- **Customer ID:** {{ casefile.header.customer_id or "NOT PROVIDED" }}
+- **Transaction ID:** {{ casefile.header.transaction_id or "NOT PROVIDED" }}
+- **Created At:** {{ casefile.header.created_at }}
+
+## Executive Summary
+{% for bullet in casefile.executive_summary.bullets %}
+- {{ bullet }}
+{% endfor %}
+- **Recommended Disposition:** {{ casefile.executive_summary.recommended_disposition }}
+- **Confidence:** {{ casefile.executive_summary.confidence }}
+- **Evidence Pointers:** {{ casefile.executive_summary.evidence_pointers | join(", ") }}
+
+## Trigger Explanation
+- **Observed facts:** {{ casefile.trigger_explanation.observed_facts }}
+- **Interpretation:** {{ casefile.trigger_explanation.interpretation }}
+- **Evidence Pointers:** {{ casefile.trigger_explanation.evidence_pointers | join(", ") }}
+
+## Rule Evaluation Table
+| Field | Operator | Threshold | Actual | Window | Satisfied | Evidence |
+|---|---|---|---|---|---|---|
+{% for row in casefile.rule_evaluation_table.rows %}
+| {{ row.field }} | {{ row.operator }} | {{ row.threshold }} | {{ row.actual }} | {{ row.window_days }} | {{ row.satisfied }} | {{ row.evidence_pointer }} |
+{% endfor %}
+
+## Customer Context
+{{ casefile.customer_context.summary }}
+{% for fact in casefile.customer_context.key_facts %}
+- **{{ fact.label }}:** {{ fact.value }} ({{ fact.evidence_pointer }})
+{% endfor %}
+
+## Transaction Evidence
+{{ casefile.transaction_evidence.summary }}
+
+### Key Transactions
+{% for item in casefile.transaction_evidence.key_transactions %}
+- **{{ item.transaction_id }}:** {{ item.description }} ({{ item.evidence_pointer }})
+{% endfor %}
+
+### Aggregates
+{% for agg in casefile.transaction_evidence.aggregates %}
+- **{{ agg.label }}:** {{ agg.value }} ({{ agg.evidence_pointer }})
+{% endfor %}
+
+## Regulatory Traceability
+{% for citation in casefile.regulatory_traceability.citations %}
+- **{{ citation.citation_id }} - {{ citation.title }} ({{ citation.jurisdiction }})**
+  - Why relevant: {{ citation.why_relevant }}
+  - Evidence pointers: {{ citation.evidence_pointers | join(", ") }}
+{% endfor %}
+
+## Timeline and Audit
+{% for event in casefile.timeline_and_audit.events %}
+- {{ event.timestamp }} | {{ event.actor_type }}:{{ event.actor_id }} | {{ event.action }} | {{ event.notes }}
+{% endfor %}
+
+## SAR Draft
+- **Required:** {{ casefile.sar_draft.required }}
+- **Narrative Draft:**
+
+{{ casefile.sar_draft.narrative_draft }}
+
+### SAR Fields
+{% for key, value in casefile.sar_draft.fields.items() %}
+- **{{ key }}:** {{ value }}
+{% endfor %}
+- **Evidence Pointers:** {{ casefile.sar_draft.evidence_pointers | join(", ") }}
+
+## Export Bundle
+- **Version:** {{ casefile.export_bundle.version }}
+- **Generated At:** {{ casefile.export_bundle.generated_at }}
+- **Export ID:** {{ casefile.export_bundle.export_id }}
+- **Source Payload Hash:** {{ casefile.export_bundle.source_payload_hash }}
+- **Evidence Hash:** {{ casefile.export_bundle.evidence_hash }}
+- **Casefile Hash:** {{ casefile.export_bundle.casefile_hash }}

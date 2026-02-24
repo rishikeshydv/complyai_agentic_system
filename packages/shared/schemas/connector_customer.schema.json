@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ConnectorCustomer",
+  "type": "object",
+  "required": ["customer_id", "snapshot"],
+  "properties": {
+    "customer_id": { "type": "string" },
+    "snapshot": { "type": "object" }
+  },
+  "additionalProperties": false
+}

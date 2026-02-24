@@ -1,0 +1,18 @@
+How to push code changes to Railway
+From agentic_system:
+
+export RAILWAY_API_TOKEN='YOUR_TOKEN'
+cd /Users/rishi/Desktop/comply-pivot/agentic_system
+
+# Recommended: deploy via the helper script (deploys all services by default)
+./scripts/railway_deploy.sh
+
+# Or deploy a subset:
+./scripts/railway_deploy.sh core-api web
+
+Deploy only the service you changed:
+railway up --service core-api --detach
+railway up --service connector --detach
+railway up --service web --detach
+railway up --service core-worker --detach
+railway up --service core-beat --detach

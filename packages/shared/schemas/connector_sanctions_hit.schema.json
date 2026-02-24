@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ConnectorSanctionsHit",
+  "type": "object",
+  "required": ["alert_id", "hits"],
+  "properties": {
+    "alert_id": { "type": "string" },
+    "hits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["hit_id", "list_source", "matched_fields", "score"],
+        "properties": {
+          "hit_id": { "type": "string" },
+          "list_source": { "type": "string" },
+          "matched_fields": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "score": { "type": "number" },
+          "features": { "type": "object" },
+          "prior_decision": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

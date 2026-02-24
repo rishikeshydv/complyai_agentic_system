@@ -1,0 +1,35 @@
+allowlist:
+  alerts:
+    - alert_id
+    - alert_type
+    - alert_metadata
+    - rule_triggered
+    - rule_description
+    - rule_thresholds
+    - rule_evaluation
+    - transaction_id
+    - customer_id
+    - sanctions_hit_preview
+  alert_feed_item:
+    - alert_id
+    - alert_type
+    - rule_triggered
+    - customer_id
+    - transaction_id
+    - created_at
+    - source_event_id
+  transactions:
+    - transaction_id
+    - snapshot
+  customers:
+    - customer_id
+    - snapshot
+  aggregates:
+    - customer_id
+    - rule_triggered
+    - window_days
+    - aggregates
+    - linked_transactions
+  sanctions_hits:
+    - alert_id
+    - hits

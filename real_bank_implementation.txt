@@ -1,0 +1,27 @@
+Great question. The core product idea is right.  
+The big shift for real banks is from **demo-grade automation** to **regulated, bank-grade controls**.
+
+**What must change for real bank deployment**
+- Re-enable and harden auth: SSO (SAML/OIDC), MFA, strict RBAC, session controls.
+- Connector security: mTLS, signed requests, IP allowlisting, key rotation, replay protection.
+- Tenant isolation: per-bank data, per-bank keys, per-bank config, no cross-tenant leakage.
+- Secrets and crypto: move from `.env` to KMS/HSM-backed secret management and encryption key lifecycle.
+- Data governance: retention policies, legal hold, PII masking, region/data residency controls.
+- Immutable audit: tamper-evident/WORM audit logs and complete chain-of-custody for evidence.
+- Operational resilience: HA, backups, disaster recovery (RPO/RTO), runbooks, on-call/SLOs.
+- Integration quality: schema contracts, versioned connector adapters, idempotency, replay-safe ingestion.
+- Compliance controls: formal change management, approvals, separation of duties, 4-eyes for SAR decisions.
+- Model risk management: validation packs, prompt/model version controls, drift monitoring, fallback behavior.
+- Human workflow hardening: queue SLAs, escalation paths, reviewer signoff, no silent auto-filing of SAR.
+- Enterprise readiness: SOC2/ISO controls, pen tests, vulnerability management, customer security questionnaires.
+
+**What stays the same**
+- Evidence-first reasoning
+- Evidence pointers for claims
+- Reproducible case outputs
+- Background generation of case files
+
+**Best next step**
+1. Define a **Pilot Hardening Plan** (security + governance + ops) for one design-partner bank.  
+2. Build a **bank integration kit** (API contract, mapping templates, test harness, runbook).  
+3. Run a **parallel pilot** (your platform vs bank’s current process) before production cutover.

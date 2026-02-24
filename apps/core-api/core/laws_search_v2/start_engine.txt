@@ -1,0 +1,5 @@
+Start infra: docker-compose.yml
+Run migration: alembic upgrade head from laws_search_v2
+Seed controls/typologies/rules: python -m laws_search_v2.seeds.seed_law_mapping
+Run app: app.py
+(Optional) wire ingestion to adapter so post-processing runs automatically after ingestion jobs.

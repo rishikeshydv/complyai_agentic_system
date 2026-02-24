@@ -1,0 +1,51 @@
+{
+  "family": "comply-ai-connector",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::879381272878:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::879381272878:role/comply-ai-ecs-task-role",
+  "containerDefinitions": [
+    {
+      "name": "connector",
+      "image": "879381272878.dkr.ecr.us-east-1.amazonaws.com/comply-ai/connector:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8100,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "PORT", "value": "8100" },
+        { "name": "UVICORN_WORKERS", "value": "2" },
+
+        { "name": "CONNECTOR_DB_URL", "value": "postgresql+psycopg2://postgres:Micrower3175@aidoppel-v0-instance-1.ckjq4oo8aa2c.us-east-1.rds.amazonaws.com:5432/connector?sslmode=require" },
+        { "name": "CONNECTOR_API_KEY", "value": "dev-connector-key" },
+        { "name": "REQUIRE_SIGNED_REQUESTS", "value": "false" },
+        { "name": "SIGNED_REQUEST_SECRET", "value": "dev-signed-secret" },
+
+        { "name": "CORE_ALERT_CALLBACK_URL", "value": "http://core-api:8000" },
+        { "name": "FIELD_ALLOWLIST_PATH", "value": "apps/connector/connector/allowlist.yaml" },
+
+        { "name": "CONNECTOR_RUN_SEED", "value": "false" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/comply-ai/connector",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health').read()\""],
+        "interval": 15,
+        "timeout": 5,
+        "retries": 5,
+        "startPeriod": 30
+      }
+    }
+  ]
+}
